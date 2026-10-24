@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SlapTab</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="header-main">
+          <img src="../assets/app/app-icon.png" class="logo" alt="SlapTab logo" />
+          <div class="header-copy">
+            <p>SlapTab</p>
+            <h1>Settings</h1>
+            <span>Set a daily active-time limit for each distracting site. Unlocks require a short math quiz.</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="icon-actions" aria-label="Settings tools">
+            <button id="export-settings" class="icon-button" type="button" aria-label="Export settings" title="Export settings" data-tooltip="Export settings">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v12"></path>
+                <path d="m7 10 5 5 5-5"></path>
+                <path d="M5 21h14"></path>
+              </svg>
+            </button>
+            <button id="import-settings" class="icon-button" type="button" aria-label="Import settings" title="Import settings" data-tooltip="Import settings">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 21V9"></path>
+                <path d="m17 14-5-5-5 5"></path>
+                <path d="M5 3h14"></path>
+              </svg>
+            </button>
+            <input id="import-file" type="file" accept="application/json,.json" hidden />
+          </div>
+          <button id="add-site" type="button" class="add-button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+            Add site
+          </button>
+        </div>
+      </header>
+
+      <p id="status" role="status" aria-live="polite"></p>
+
+      <section class="site-list-shell" aria-label="Blocked sites">
+        <div class="list-heading">
+          <h2>Sites</h2>
+          <span id="site-count"></span>
+        </div>
+        <div id="empty-state" class="empty-state" hidden>
+          <strong>No sites yet</strong>
+          <p>Add your first distraction and set a daily limit.</p>
+          <button id="empty-add-site" type="button">Add site</button>
+        </div>
+        <section id="sites" aria-label="Blocked sites"></section>
+      </section>
+
+      <section class="settings-bar" aria-label="Unlock settings">
+        <div>
+          <label for="unlock-minutes">Temporary unlock after quiz</label>
+          <p>When a blocked site is unlocked by solving the math quiz, keep access open for this many minutes.</p>
+        </div>
+        <span class="number-control">
+            <input id="unlock-minutes" type="number" min="1" max="240" step="1" />
+            minutes
+        </span>
+      </section>
+
+      <footer class="save-bar">
+        <button id="save" class="primary-save" type="button">Save changes</button>
+      </footer>
+    </main>
+
+    <template id="site-template">
+      <details class="site-card">
+        <summary>
+          <img class="site-favicon" alt="" />
+          <span class="favicon-fallback"></span>
+          <span class="site-title">
+            <strong class="summary-title"></strong>
+            <span class="status-dot"></span>
+          </span>
+          <span class="accordion-cue" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="m9 18 6-6-6-6"></path>
+            </svg>
+          </span>
+        </summary>
+
+        <div class="site-details">
+          <div class="grid">
+            <label class="domain-field">
+              Domain
+              <input data-field="pattern" type="text" placeholder="instagram.com" />
+            </label>
+            <label>
+              Daily active limit
+              <span class="number-control">
+                <input data-field="dailyLimitMinutes" type="number" min="0" step="1" />
+                minutes
+              </span>
+              <small>The site blocks after this many active minutes today.</small>
+            </label>
+          </div>
+
+          <div class="detail-bottom">
+            <label class="switch">
+              <input data-field="enabled" type="checkbox" />
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="switch-label">Enabled</span>
+            </label>
+
+            <div class="usage-card">
+              <span>today</span>
+              <strong class="usage"></strong>
+            </div>
+          </div>
+
+          <div class="detail-actions">
+            <button data-action="remove" class="delete-button" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6h18"></path>
+                <path d="M8 6V4h8v2"></path>
+                <path d="M19 6l-1 14H6L5 6"></path>
+                <path d="M10 11v5"></path>
+                <path d="M14 11v5"></path>
+              </svg>
+              Delete
+            </button>
+          </div>
+        </div>
+      </details>
+    </template>
+
+    <script src="rules.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

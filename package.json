@@ -1,0 +1,11 @@
+{
+  "name": "slaptab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Open-source Chrome extension for intentional browsing with active-time limits and math-quiz unlocks.",
+  "scripts": {
+    "check": "node --check src/background.js && node --check src/content.js && node --check src/options.js && node --check src/rules.js && node -e \"JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))\"",
+    "reset:dev": "node scripts/reset-dev-storage.js",
+    "test": "node --test"
+  }
+}
