@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "SlapTab"
+description = "A branded landing page for SlapTab, a Chrome extension that helps people reduce distracting browsing with per-site daily limits and instant blocking."
+version = "1.0.0"
+id = "artifacts/slaptab-site"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23890
+
+[services.development]
+run = "pnpm --filter @workspace/slaptab-site run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/slaptab-site", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/slaptab-site/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23890"
+BASE_PATH = "/"
