@@ -8,8 +8,10 @@ let tickInFlight = false;
 let slapSoundPlayed = false;
 
 function formatMinutes(seconds) {
-  const minutes = Math.floor((seconds || 0) / 60);
-  const remainingSeconds = Math.floor((seconds || 0) % 60);
+  const total = Math.floor(seconds || 0);
+  const minutes = Math.floor(total / 60);
+  const remainingSeconds = total % 60;
+  if (remainingSeconds === 0) return `${minutes}m`;
   return `${minutes}m ${String(remainingSeconds).padStart(2, "0")}s`;
 }
 
@@ -175,15 +177,22 @@ async function flushActiveSeconds() {
   });
   tickInFlight = false;
 
-  if (decision?.tracked) {
-    blocked = Boolean(decision.blocked);
-    if (blocked) updateOverlay(decision);
+  if (!decision || !decision.tracked) {
+    // If background did not count this tick, refund the seconds so they are not lost
+    pendingSeconds += seconds;
+    return;
+  }
+
+  blocked = Boolean(decision.blocked);
+  if (blocked) {
+    pendingSeconds = 0;
+    updateOverlay(decision);
   }
 }
 
 async function collectActiveTime() {
   const now = Date.now();
-  const deltaSeconds = Math.min(10, Math.max(0, (now - lastTickAt) / 1000));
+  const deltaSeconds = Math.min(60, Math.max(0, (now - lastTickAt) / 1000));
   lastTickAt = now;
 
   if (!blocked && isVisible()) {
@@ -205,7 +214,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 refreshDecision();
-tickTimer = setInterval(() => collectActiveTime(false), 2000);
+tickTimer = setInterval(() => collectActiveTime(false), 1000);
 refreshTimer = setInterval(refreshDecision, 30000);
 
 window.addEventListener("pagehide", () => {

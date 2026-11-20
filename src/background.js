@@ -1,4 +1,5 @@
 importScripts("rules.js");
+importScripts("analytics.js");
 
 const {
   STORAGE_KEYS,
@@ -69,7 +70,7 @@ async function canCountActiveTick(sender) {
   if (!activeTab || activeTab.id !== sender.tab.id) return false;
 
   if (chrome.idle?.queryState) {
-    const state = await chrome.idle.queryState(15);
+    const state = await chrome.idle.queryState(60);
     return state === "active";
   }
 
@@ -83,10 +84,18 @@ async function isSenderActiveTab(sender) {
   return Boolean(activeTab && activeTab.id === sender.tab.id);
 }
 
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(async (details) => {
   const data = await chrome.storage.local.get(STORAGE_KEYS.settings);
   if (!data[STORAGE_KEYS.settings]) {
     await savePartial({ [STORAGE_KEYS.settings]: DEFAULT_SETTINGS });
+  }
+
+  if (details.reason === "install") {
+    SlapTabAnalytics.sendEvent("extension_installed");
+  } else if (details.reason === "update") {
+    SlapTabAnalytics.sendEvent("extension_updated", {
+      previous_version: details.previousVersion || "unknown"
+    });
   }
 });
 
@@ -113,7 +122,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse(decision);
         return;
       }
-      const usageSeconds = await recordActiveSeconds(decision.site.id, message.seconds);
+
+      // Do not record more seconds than needed to reach the daily limit unless unlocked
+      let secondsToAdd = Math.max(0, Number(message.seconds) || 0);
+      const isUnlocked = decision.unlockedUntil && decision.unlockedUntil > Date.now();
+      if (!isUnlocked && decision.limitSeconds > 0) {
+        const remainingToLimit = Math.max(0, decision.limitSeconds - (decision.usageSeconds || 0));
+        secondsToAdd = Math.min(secondsToAdd, remainingToLimit);
+      }
+
+      const usageSeconds = await recordActiveSeconds(decision.site.id, secondsToAdd);
       const refreshedState = await getState();
       sendResponse({
         ...getDecision(refreshedState, message.hostname),
@@ -144,6 +162,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
 
       await playSlapSound();
+      sendResponse({ ok: true });
+      return;
+    }
+
+    if (message.type === "ANALYTICS_EVENT") {
+      SlapTabAnalytics.sendEvent(message.event_name, message.event_params || {});
       sendResponse({ ok: true });
       return;
     }

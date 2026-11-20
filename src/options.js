@@ -9,6 +9,18 @@ let settings = {
 };
 let usage = {};
 
+function trackEvent(name, params) {
+  try {
+    chrome.runtime.sendMessage({
+      type: "ANALYTICS_EVENT",
+      event_name: name,
+      event_params: params || {}
+    });
+  } catch {
+    // Fail silently
+  }
+}
+
 function hasChromeStorage() {
   return Boolean(globalThis.chrome?.storage?.local);
 }
@@ -59,9 +71,11 @@ function todayKey() {
 }
 
 function formatUsage(seconds) {
-  const minutes = Math.floor((seconds || 0) / 60);
-  const remainingSeconds = Math.floor((seconds || 0) % 60);
+  const total = Math.floor(seconds || 0);
+  const minutes = Math.floor(total / 60);
+  const remainingSeconds = total % 60;
   if (minutes <= 0) return `${remainingSeconds}s`;
+  if (remainingSeconds === 0) return `${minutes}m`;
   return `${minutes}m ${String(remainingSeconds).padStart(2, "0")}s`;
 }
 
@@ -323,6 +337,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     bindEvents();
     await load();
+    trackEvent("extension_opened");
   } catch (error) {
     setStatus(error.message || "Could not initialize SlapTab settings.");
   }
